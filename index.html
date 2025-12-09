@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Okey Puan Hesaplayıcı</title>
-
 <style>
 /* Sadece "Okey bitme seçenekleri" ile "Eli Ekle" butonu arasındaki boşluk */
 #okeyGrup + button { margin-top: 40px; }
@@ -53,30 +52,15 @@ tfoot td { font-weight:bold; background:#eee; }
 .mavi { background-color:#d6e0ff; }
 .sari { background-color:#fff6d6; }
 
-/* ⭐ AÇILIR KAPANIR AYAR PANELİ */
-#ayarPanel {
-  background:#f0f0f0;
-  border-radius:12px;
-  padding:15px;
-  margin-bottom:15px;
-  display:none;
-  border:2px solid #ccc;
-}
-#ayarBaslik {
-  background:#444;
-  color:white;
-  padding:15px;
-  border-radius:10px;
-  cursor:pointer;
-  text-align:center;
-  font-weight:bold;
-  margin-bottom:10px;
-}
+#kimseBitmediAlani { display:none; margin-top:10px; }
 
 .btn-group { display:flex; flex-wrap:wrap; gap:30px; margin-top:20px; }
 .btn-option, .btn-color, .btn-okey {
   flex:1; text-align:center; border-radius:10px; padding:10px; font-weight:600; cursor:pointer; border:2px solid #ccc; transition:all 0.15s ease; user-select:none; color:#333;
 }
+/* Okey grubunda 3 buton olduğu için flex-basis ayarlaması */
+#okeyGrup .btn-okey { flex: 5 0 calc(32% - 40px); }
+
 .btn-option:hover, .btn-color:hover, .btn-okey:hover { background:#f0f0f0; }
 
 .btn-teamA { border-color:#007aff; }
@@ -96,155 +80,210 @@ tfoot td { font-weight:bold; background:#eee; }
 
 .btn-okey.hayir { background:#aaa; color:white; }
 .btn-okey.okey { background:#1aae55; color:white; }
+.btn-okey.ciftokey { background:#ffcc00; color:#333; } /* Yeni buton rengi */
 .btn-okey.active { transform:scale(1.05); outline:6px solid #333; }
 
+/* Yeni Katsayı Ayarları Stilleri */
+#katsayiAyarlari {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f0f0f0;
+    border-radius: 10px;
+    display: none; /* Varsayılan olarak kapalı */
+    animation: fadeIn 0.3s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+#katsayiAyarlari .katsayi-input {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+}
+#katsayiAyarlari .katsayi-input input {
+    width: 60%;
+    margin-top: 0;
+    padding: 10px;
+}
+#katsayiAyarlari label {
+    margin-top: 0;
+}
+#katsayiToggle {
+    margin-bottom: 5px;
+    background: #444;
+}
+#katsayiToggle:hover {
+    background: #333;
+}
+
+/* Yeni eklenecek kısım: */
+/* Beraberlik İçin Gereken Taş Tablosu Başlık ve İçerik Hizalaması */
+#farkAlani table th, #farkAlani table td {
+    text-align: center !important; /* Tüm içeriği ortalar */
+    vertical-align: middle;
+}
 </style>
 </head>
 <body>
-
 <div class="container">
+  <h1>🧮 Okey Puan Hesaplayıcı</h1>
 
-<h1>🧮 Okey Puan Hesaplayıcı</h1>
+  <button id="katsayiToggle" onclick="toggleKatsayiAyarlari()">⚙️ Taş Katsayı Ayarları</button>
 
-<!-- ⭐ AÇILIR KAPANIR AYAR PANELİ BAŞLIĞI -->
-<div id="ayarBaslik">⚙️ Taş Katsayı Ayarları ▼</div>
+  <div id="katsayiAyarlari">
+    <h4>Taş Katsayılarını Ayarla</h4>
+    <div class="katsayi-input">
+      <label>⚫ Siyah Katsayısı:</label>
+      <input type="number" id="katsayi_siyah" value="5" min="1" onchange="katsayiGuncelle()">
+    </div>
+    <div class="katsayi-input">
+      <label>🔴 Kırmızı Katsayısı:</label>
+      <input type="number" id="katsayi_kirmizi" value="4" min="1" onchange="katsayiGuncelle()">
+    </div>
+    <div class="katsayi-input">
+      <label>🔵 Mavi Katsayısı:</label>
+      <input type="number" id="katsayi_mavi" value="3" min="1" onchange="katsayiGuncelle()">
+    </div>
+    <div class="katsayi-input">
+      <label>🟡 Sarı Katsayısı:</label>
+      <input type="number" id="katsayi_sari" value="2" min="1" onchange="katsayiGuncelle()">
+    </div>
+  </div>
+  <button id="resetBtn" onclick="if(confirm('Yeni parti başlatılsın mı?')) sifirla(); kaydetDurum();">Yeni Parti</button>
 
-<!-- ⭐ PANEL -->
-<div id="ayarPanel">
-  <label>Siyah Katsayı:</label>
-  <input type="number" id="kat_siyah">
+  <label>Takım İsimleri:</label>
+  <input type="text" id="takimAIsim" value="Takım A">
+  <input type="text" id="takimBIsim" value="Takım B">
+  <button onclick="takimGuncelle(); kaydetDurum();">Takımları Güncelle</button>
 
-  <label>Kırmızı Katsayı:</label>
-  <input type="number" id="kat_kirmizi">
+  <label>Biten Takım:</label>
+  <div class="btn-group" id="bitenGrup">
+    <div class="btn-option btn-teamA active" data-value="A">Takım A</div>
+    <div class="btn-option btn-teamB" data-value="B">Takım B</div>
+    <div class="btn-option btn-none" data-value="yok">Kimse Bitmedi</div>
+  </div>
 
-  <label>Mavi Katsayı:</label>
-  <input type="number" id="kat_mavi">
+  <label>Okey Rengi:</label>
+  <div class="btn-group" id="renkGrup">
+    <div class="btn-color siyah active" data-value="siyah">⚫ Siyah</div>
+    <div class="btn-color kirmizi" data-value="kirmizi">🔴 Kırmızı</div>
+    <div class="btn-color mavi" data-value="mavi">🔵 Mavi</div>
+    <div class="btn-color sari" data-value="sari">🟡 Sarı</div>
+  </div>
 
-  <label>Sarı Katsayı:</label>
-  <input type="number" id="kat_sari">
+  <div id="tekliAlan">
+    <label>Karşı Takımın Per Olmayan Taş Toplamı:</label>
+    <input type="number" id="perOlmayanToplam" placeholder="örn. 45"
+      inputmode="numeric" pattern="[0-9]*">
+  </div>
 
-  <button id="kaydetKatsayiBtn" style="margin-top:15px;">Kaydet</button>
+  <div id="kimseBitmediAlani">
+    <label id="lblA">Takım A Per Olmayan Taş Toplamı:</label>
+    <input type="number" id="tasA" placeholder="örn. 45" inputmode="numeric" pattern="[0-9]*">
+    <label id="lblB">Takım B Per Olmayan Taş Toplamı:</label>
+    <input type="number" id="tasB" placeholder="örn. 60" inputmode="numeric" pattern="[0-9]*">
+  </div>
+
+  <label>Biten taraf okey ile mi bitti?</label>
+  <div class="btn-group" id="okeyGrup">
+    <div class="btn-okey hayir active" data-value="hayir">❌ Hayır</div>
+    <div class="btn-okey okey" data-value="okey">✅ Evet (Okey ile)</div>
+    <div class="btn-okey ciftokey" data-value="ciftokey">✨ Çift + Okey</div>
+  </div>
+
+  <button onclick="elEkle(); kaydetDurum();">Eli Ekle</button>
+
+  <table id="puanTablosu">
+    <thead>
+      <tr>
+        <th>El</th><th>Biten</th><th>Renk</th><th>Durum</th>
+        <th id="baslikA">A Puan</th><th id="baslikB">B Puan</th><th>🗑️</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr><td colspan="4">Toplam</td><td id="toplamA">0</td><td id="toplamB">0</td><td></td></tr>
+    </tfoot>
+  </table>
+
+  <div id="kazanan"></div>
+
+  <div id="farkAlani" style="margin-top:25px; padding:15px; background:#eef7ff; border-radius:10px;">
+    <h3>Puan Farkı ve Kazanma İçin Gereken Taş</h3>
+    <p><b>Puan Farkı:</b> <span id="farkGosterge">0</span></p>
+
+    <h4>Beraberlik İçin Gereken Per Olmayan Taş Sayısı</h4>
+
+    <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+      <thead>
+        <tr style="background:#007aff; color:white;">
+          <th>Renk</th>
+          <th>Okeysiz Bitme</th>
+          <th>Okey ile Bitme</th>
+          <th>Çift + Okey ile Bitme</th> </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Siyah</td>
+          <td id="gereken_siyah_okeysiz"></td>
+          <td id="gereken_siyah_okey"></td>
+          <td id="gereken_siyah_ciftokey"></td> </tr>
+        <tr>
+          <td>Kırmızı</td>
+          <td id="gereken_kirmizi_okeysiz"></td>
+          <td id="gereken_kirmizi_okey"></td>
+          <td id="gereken_kirmizi_ciftokey"></td> </tr>
+        <tr>
+          <td>Mavi</td>
+          <td id="gereken_mavi_okeysiz"></td>
+          <td id="gereken_mavi_okey"></td>
+          <td id="gereken_mavi_ciftokey"></td> </tr>
+        <tr>
+          <td>Sarı</td>
+          <td id="gereken_sari_okeysiz"></td>
+          <td id="gereken_sari_okey"></td>
+          <td id="gereken_sari_ciftokey"></td> </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <button id="ssBtn" style="display:none; background:#444; margin-top:20px;"
+           onclick="tabloSS()">📸 Skor Tablosu Ekran Görüntüsü</button>
+
 </div>
-
-<button id="resetBtn" onclick="if(confirm('Yeni parti başlatılsın mı?')) sifirla(); kaydetDurum();">
-  Yeni Parti
-</button>
-
-<label>Takım İsimleri:</label>
-<input type="text" id="takimAIsim" value="Takım A">
-<input type="text" id="takimBIsim" value="Takım B">
-<button onclick="takimGuncelle(); kaydetDurum();">Takımları Güncelle</button>
-
-<label>Biten Takım:</label>
-<div class="btn-group" id="bitenGrup">
-  <div class="btn-option btn-teamA active" data-value="A">Takım A</div>
-  <div class="btn-option btn-teamB" data-value="B">Takım B</div>
-  <div class="btn-option btn-none" data-value="yok">Kimse Bitmedi</div>
-</div>
-
-<label>Okey Rengi:</label>
-<div class="btn-group" id="renkGrup">
-  <div class="btn-color siyah active" data-value="siyah">⚫ Siyah</div>
-  <div class="btn-color kirmizi" data-value="kirmizi">🔴 Kırmızı</div>
-  <div class="btn-color mavi" data-value="mavi">🔵 Mavi</div>
-  <div class="btn-color sari" data-value="sari">🟡 Sarı</div>
-</div>
-
-<div id="tekliAlan">
-  <label>Karşı Takımın Per Olmayan Taş Toplamı:</label>
-  <input type="number" id="perOlmayanToplam" placeholder="örn. 45" inputmode="numeric">
-</div>
-
-<div id="kimseBitmediAlani" style="display:none;">
-  <label id="lblA">Takım A Per Olmayan Taş Toplamı:</label>
-  <input type="number" id="tasA" inputmode="numeric">
-  <label id="lblB">Takım B Per Olmayan Taş Toplamı:</label>
-  <input type="number" id="tasB" inputmode="numeric">
-</div>
-
-<label>Biten taraf okey ile mi bitti?</label>
-<div class="btn-group" id="okeyGrup">
-  <div class="btn-okey hayir active" data-value="hayir">❌ Hayır</div>
-  <div class="btn-okey okey" data-value="okey">✅ Evet (Okey ile)</div>
-</div>
-
-<button onclick="elEkle(); kaydetDurum();">Eli Ekle</button>
-
-<table id="puanTablosu">
-  <thead>
-    <tr><th>El</th><th>Biten</th><th>Renk</th><th>Durum</th>
-    <th id="baslikA">A Puan</th><th id="baslikB">B Puan</th><th>🗑️</th></tr>
-  </thead>
-  <tbody></tbody>
-  <tfoot>
-    <tr><td colspan="4">Toplam</td><td id="toplamA">0</td><td id="toplamB">0</td><td></td></tr>
-  </tfoot>
-</table>
-
-<div id="kazanan"></div>
-
-<button id="ssBtn" style="display:none; background:#444; margin-top:20px;">📸 Skor Tablosu Ekran Görüntüsü</button>
-
-</div> <!-- container -->
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
-/* =================================================================================
-   KATSAYI ve LOCALSTORAGE
-================================================================================= */
-
-let katsayiAyar = JSON.parse(localStorage.getItem("katsayiAyar")) || {
-  siyah:5,
-  kirmizi:4,
-  mavi:3,
-  sari:2
-};
-
-const renkKatsayi = {
-  siyah:katsayiAyar.siyah,
-  kirmizi:katsayiAyar.kirmizi,
-  mavi:katsayiAyar.mavi,
-  sari:katsayiAyar.sari,
-};
-
-/* Panel aç/kapa */
-document.getElementById("ayarBaslik").onclick = ()=>{
-  const panel=document.getElementById("ayarPanel");
-  panel.style.display = panel.style.display==="block"?"none":"block";
-};
-
-/* Panel içi inputlara mevcut değerleri yükle */
-document.getElementById("kat_siyah").value = katsayiAyar.siyah;
-document.getElementById("kat_kirmizi").value = katsayiAyar.kirmizi;
-document.getElementById("kat_mavi").value = katsayiAyar.mavi;
-document.getElementById("kat_sari").value = katsayiAyar.sari;
-
-/* Kaydet */
-document.getElementById("kaydetKatsayiBtn").onclick = ()=>{
-
-  katsayiAyar = {
-    siyah:Number(document.getElementById("kat_siyah").value),
-    kirmizi:Number(document.getElementById("kat_kirmizi").value),
-    mavi:Number(document.getElementById("kat_mavi").value),
-    sari:Number(document.getElementById("kat_sari").value)
-  };
-
-  Object.keys(katsayiAyar).forEach(r=>renkKatsayi[r]=katsayiAyar[r]);
-
-  localStorage.setItem("katsayiAyar", JSON.stringify(katsayiAyar));
-
-  alert("Katsayılar güncellendi!");
-};
-
-/* =================================================================================
-   SENİN ORİJİNAL KODUN (KATSAYI SİSTEMİNE ENTEGRE EDİLMİŞ)
-================================================================================= */
-
 let elSayisi=0, toplamA=0, toplamB=0;
 const maxEl=11;
-
+// ⭐ renkKatsayi, artık dinamik olarak ayarlanabilen bir obje
+let renkKatsayi={siyah:5,kirmizi:4,mavi:3,sari:2};
 let bitenTakim="A", okeyRenk="siyah", okeyBitis="hayir";
+
+// ⭐ 2. Değişiklik: Katsayıları güncelleme ve yükleme fonksiyonları
+function katsayiGuncelle() {
+    renkKatsayi.siyah = parseInt(document.getElementById("katsayi_siyah").value) || 5;
+    renkKatsayi.kirmizi = parseInt(document.getElementById("katsayi_kirmizi").value) || 4;
+    renkKatsayi.mavi = parseInt(document.getElementById("katsayi_mavi").value) || 3;
+    renkKatsayi.sari = parseInt(document.getElementById("katsayi_sari").value) || 2;
+    kaydetDurum(); // Katsayıları kaydet
+    farkVeGerekenTasHesapla(); // Katsayı değişince gereken taşları yeniden hesapla
+}
+
+function yukleKatsayilar() {
+    // Katsayıları localStorage'dan veya varsayılan değerlerden yükle
+    document.getElementById("katsayi_siyah").value = renkKatsayi.siyah;
+    document.getElementById("katsayi_kirmizi").value = renkKatsayi.kirmizi;
+    document.getElementById("katsayi_mavi").value = renkKatsayi.mavi;
+    document.getElementById("katsayi_sari").value = renkKatsayi.sari;
+}
+
+function toggleKatsayiAyarlari() {
+    const ayarlar = document.getElementById("katsayiAyarlari");
+    ayarlar.style.display = ayarlar.style.display === "block" ? "none" : "block";
+}
+// ⭐ 2. Değişiklik Bitişi
 
 function grupSecici(id, callback){
   document.querySelectorAll(`#${id} .btn-option, #${id} .btn-color, #${id} .btn-okey`).forEach(btn=>{
@@ -252,6 +291,7 @@ function grupSecici(id, callback){
       btn.parentElement.querySelectorAll(".active").forEach(a=>a.classList.remove("active"));
       btn.classList.add("active");
       callback(btn.dataset.value);
+      kaydetDurum(); // Seçim değişince kaydet
     });
   });
 }
@@ -276,31 +316,62 @@ function takimGuncelle(){
 }
 
 function hesapla(biten,renk,tas,okey){
-  const k = renkKatsayi[renk];
+  const k=renkKatsayi[renk];
+  let bitenDus, digerEkle;
+  let durumText="Normal"; // Varsayılan durum
 
-  if(biten==="yok"){
-    return {a:tas.a*k, b:tas.b*k, durum:"Kimse Bitmedi"};
+  if(biten==="yok"){ return {a:tas.a*k,b:tas.b*k,durum:"Kimse Bitmedi"}; }
+
+  const perToplam=tas;
+  const yanik=perToplam>=100;
+
+  // Standart durumlar
+  if(okey==="hayir"){
+    bitenDus=10*k;
+    digerEkle=perToplam*k;
+    durumText="Normal";
+  } else if(okey==="okey"){
+    // 1. Değişiklik: Okey ile bitme (Normal Okey)
+    bitenDus=100*k;
+    digerEkle=perToplam*k * 2; // Okey ile bitme (Normal) için kural: karşı puanı 2 katı
+    durumText="OKEY";
+  } else if(okey==="ciftokey"){
+    // 1. Değişiklik: Çift + Okey ile bitme (Okey ile bitme'nin 2 katı)
+    const normalOkeyDus = 100 * k;
+    const normalOkeyEkle = perToplam * k * 2;
+    
+    bitenDus = normalOkeyDus * 2; // 100k'nın 2 katı = 200k (Kendi puanının 2 katı silinir)
+    digerEkle = normalOkeyEkle * 2; // (perToplam*k*2)'nin 2 katı (Karşı puan 4 katı eklenir)
+    durumText="Çift + Okey";
   }
 
-  const perToplam = tas;
-  const yanik = perToplam >= 100;
 
-  let bitenDus = 10*k;
-  let digerEkle = perToplam*k;
+  // Yanık durumu kontrolü ve puanları
+  if(yanik){
+    if(okey==="hayir"){
+        bitenDus=10*k;
+        digerEkle=100*k;
+        durumText="YANIK";
+    } else if(okey==="okey"){
+        bitenDus=100*k;
+        digerEkle=100*k; // Okey bitmiş ve Yanık var: Okeyin 2 katı kuralı geçerli olmalı
+        durumText="Yanık + OKEY";
+    } else if(okey==="ciftokey"){
+        // 1. Değişiklik: Yanık + Çift Okey
+        const normalOkeyEkle = 100*k; // Yanık durumunda normal okeyde eklenecek puan
+        bitenDus = (100*k) * 2; // Çift Okeyin düşüşü (200k)
+        digerEkle = normalOkeyEkle * 2; // Çift Okeyin eklenmesi (Yanık Okey'in 2 katı)
+        durumText="Yanık + Çift + Okey";
+    }
+  }
 
-  if(okey==="okey"){ bitenDus = 100*k; digerEkle *= 2; }
-  if(yanik){ bitenDus = 10*k; digerEkle = 100*k; }
-  if(yanik && okey==="okey"){ bitenDus = 100*k; digerEkle = 100*k; }
-
-  if(biten==="A")
-    return {a:-bitenDus, b:digerEkle, durum: yanik?(okey==="okey"?"YANIK+OKEY":"YANIK"):(okey==="okey"?"OKEY":"Normal") };
-  else
-    return {a:digerEkle, b:-bitenDus, durum: yanik?(okey==="okey"?"YANIK+OKEY":"YANIK"):(okey==="okey"?"OKEY":"Normal") };
+  // Puanların takımlara dağıtılması
+  if(biten==="A") return {a:-bitenDus,b:digerEkle,durum:durumText};
+  else return {a:digerEkle,b:-bitenDus,durum:durumText};
 }
 
 function elEkle(){
   if(elSayisi>=maxEl){ alert("11 el tamamlandı!"); return; }
-
   let sonuc;
   if(bitenTakim==="yok"){
     const ta=parseInt(document.getElementById("tasA").value);
@@ -312,7 +383,6 @@ function elEkle(){
     if(isNaN(per)){ alert("Per olmayan taş toplamını giriniz!"); return; }
     sonuc=hesapla(bitenTakim,okeyRenk,per,okeyBitis);
   }
-
   elSayisi++;
   toplamA+=sonuc.a; toplamB+=sonuc.b;
 
@@ -320,10 +390,8 @@ function elEkle(){
   const row=document.createElement("tr");
   row.className=okeyRenk;
   row.dataset.a=sonuc.a; row.dataset.b=sonuc.b;
-
   const aName=document.getElementById("takimAIsim").value||"Takım A";
   const bName=document.getElementById("takimBIsim").value||"Takım B";
-
   row.innerHTML=`
     <td>${elSayisi}</td>
     <td>${bitenTakim==="yok"?"Kimse Bitmedi":(bitenTakim==="A"?aName:bName)}</td>
@@ -332,28 +400,25 @@ function elEkle(){
     <td class="${sonuc.a>=0?'plus':'minus'}">${sonuc.a>0?'+':''}${sonuc.a}</td>
     <td class="${sonuc.b>=0?'plus':'minus'}">${sonuc.b>0?'+':''}${sonuc.b}</td>
     <td><button class="deleteBtn" onclick="elSil(this)">Sil</button></td>`;
-
   tbody.appendChild(row);
-
   document.getElementById("toplamA").innerText=toplamA;
   document.getElementById("toplamB").innerText=toplamB;
 
-  farkHesapla();
+  farkVeGerekenTasHesapla();
+
   if(elSayisi===maxEl) kazanan();
 }
 
 function elSil(btn){
   const tr=btn.closest("tr");
-  toplamA-=Number(tr.dataset.a);
-  toplamB-=Number(tr.dataset.b);
+  toplamA-=Number(tr.dataset.a); toplamB-=Number(tr.dataset.b);
   tr.remove(); elSayisi--;
-
   document.getElementById("toplamA").innerText=toplamA;
   document.getElementById("toplamB").innerText=toplamB;
-
   document.getElementById("kazanan").classList.remove("show");
 
-  farkHesapla();
+  farkVeGerekenTasHesapla();
+
   kaydetDurum();
 }
 
@@ -366,7 +431,12 @@ function sifirla(){
   document.getElementById("kazanan").innerText="";
   document.getElementById("ssBtn").style.display="none";
 
-  farkHesapla();
+  // Katsayıları varsayılana çek (İstenmedi ancak tutarlılık için)
+  renkKatsayi={siyah:5,kirmizi:4,mavi:3,sari:2};
+  yukleKatsayilar(); 
+  
+  farkVeGerekenTasHesapla();
+
   kaydetDurum();
 }
 
@@ -374,23 +444,23 @@ function kazanan(){
   const a=document.getElementById("takimAIsim").value||"Takım A";
   const b=document.getElementById("takimBIsim").value||"Takım B";
   const div=document.getElementById("kazanan");
-
   if(toplamA<toplamB) div.innerText=`🏆 Kazanan: ${a} (${toplamA} - ${toplamB})`;
   else if(toplamB<toplamA) div.innerText=`🏆 Kazanan: ${b} (${toplamB} - ${toplamA})`;
   else div.innerText=`🤝 Berabere! (${toplamA} - ${toplamB})`;
-
   div.classList.add("show");
+
   document.getElementById("ssBtn").style.display="block";
 }
 
-/* LOCAL STORAGE */
+// --- LocalStorage ile durum saklama ---
 function kaydetDurum(){
   const data={
     elSayisi, toplamA, toplamB, bitenTakim, okeyRenk, okeyBitis,
     takimA: document.getElementById("takimAIsim").value,
     takimB: document.getElementById("takimBIsim").value,
+    renkKatsayi: renkKatsayi, // ⭐ Katsayıları da kaydet
     rows: Array.from(document.querySelectorAll("#puanTablosu tbody tr")).map(tr=>({
-      innerHTML: tr.innerHTML, className: tr.className, dataset:{a:tr.dataset.a,b:tr.dataset.b}
+      innerHTML: tr.innerHTML, className: tr.className, dataset: {a: tr.dataset.a, b: tr.dataset.b}
     }))
   };
   localStorage.setItem("okeyDurum", JSON.stringify(data));
@@ -398,28 +468,41 @@ function kaydetDurum(){
 
 function yukleDurum(){
   const data=JSON.parse(localStorage.getItem("okeyDurum"));
-  if(!data) return;
-
+  if(!data) { yukleKatsayilar(); return; } // İlk açılışta katsayıları yükle
+  
   elSayisi=data.elSayisi; toplamA=data.toplamA; toplamB=data.toplamB;
   bitenTakim=data.bitenTakim; okeyRenk=data.okeyRenk; okeyBitis=data.okeyBitis;
-
   document.getElementById("takimAIsim").value=data.takimA;
   document.getElementById("takimBIsim").value=data.takimB;
+  
+  if (data.renkKatsayi) { // ⭐ Katsayıları yükle
+    renkKatsayi = data.renkKatsayi;
+  }
+  yukleKatsayilar(); // Input alanlarını güncelle
+  
   takimGuncelle();
 
   const tbody=document.querySelector("#puanTablosu tbody");
   tbody.innerHTML="";
   data.rows.forEach(r=>{
     const tr=document.createElement("tr");
-    tr.innerHTML=r.innerHTML;
-    tr.className=r.className;
-    tr.dataset.a=r.dataset.a;
-    tr.dataset.b=r.dataset.b;
+    tr.innerHTML=r.innerHTML; tr.className=r.className;
+    tr.dataset.a=r.dataset.a; tr.dataset.b=r.dataset.b;
     tbody.appendChild(tr);
   });
 
-  farkHesapla();
-  if(elSayisi>=maxEl){
+  document.querySelectorAll("#bitenGrup .btn-option").forEach(b=>b.classList.toggle("active", b.dataset.value===bitenTakim));
+  document.querySelectorAll("#renkGrup .btn-color").forEach(b=>b.classList.toggle("active", b.dataset.value===okeyRenk));
+  document.querySelectorAll("#okeyGrup .btn-okey").forEach(b=>b.classList.toggle("active", b.dataset.value===okeyBitis));
+
+  document.getElementById("toplamA").innerText=toplamA;
+  document.getElementById("toplamB").innerText=toplamB;
+  document.getElementById("tekliAlan").style.display=bitenTakim==="yok"?"none":"block";
+  document.getElementById("kimseBitmediAlani").style.display=bitenTakim==="yok"?"block":"none";
+
+  farkVeGerekenTasHesapla();
+
+  if(elSayisi>=maxEl) {
     kazanan();
     document.getElementById("ssBtn").style.display="block";
   }
@@ -427,22 +510,71 @@ function yukleDurum(){
 
 yukleDurum();
 
-/* FARK HESABI */
-function farkHesapla(){
-  // sadeleştirilmiş hali: sadece tabloyu güncellediğinde fark hesaplıyor
+// ⭐ Gerekli Taş Hesaplama Fonksiyonu
+function farkVeGerekenTasHesapla() {
+    const tbody = document.querySelector("#puanTablosu tbody");
+    const farkGosterge = document.getElementById("farkGosterge");
+    const requiredFields = ["siyah", "kirmizi", "mavi", "sari"].flatMap(renk => [
+        `gereken_${renk}_okeysiz`,
+        `gereken_${renk}_okey`,
+        `gereken_${renk}_ciftokey` // ⭐ Yeni alan
+    ]);
+    
+    // Eğer skor tablosu boşsa tüm değerleri sıfır yap
+    if (tbody.children.length === 0) {
+        farkGosterge.innerText = "0";
+        requiredFields.forEach(id => {
+            document.getElementById(id).innerText = "0";
+        });
+        return;
+    }
+
+    const fark = Math.abs(toplamA - toplamB);
+    farkGosterge.innerText = fark;
+
+    const renkSirasi = [
+        { id: "siyah", k: renkKatsayi.siyah },
+        { id: "kirmizi", k: renkKatsayi.kirmizi },
+        { id: "mavi", k: renkKatsayi.mavi },
+        { id: "sari", k: renkKatsayi.sari },
+    ];
+
+    renkSirasi.forEach(r => {
+        const k = r.k;
+        const bitenTakimKaybi = 10 * k;
+        
+        // Okeysiz Bitme
+        const okeysiz = (fark - bitenTakimKaybi) / k;
+        
+        // Okey ile Bitme (Karşı puan 2 katı)
+        // Denklem: Fark = (DigerTasinToplami * k * 2) - (-100 * k)
+        // DigerTasinToplami = (Fark - 100k) / (2k)
+        const okey = (fark - (100 * k)) / (2 * k);
+
+        // Çift + Okey ile Bitme (Karşı puan 4 katı)
+        // Denklem: Fark = (DigerTasinToplami * k * 4) - (-200 * k)
+        // DigerTasinToplami = (Fark - 200k) / (4k)
+        const ciftokey = (fark - (200 * k)) / (4 * k); // ⭐ Yeni hesaplama
+
+        document.getElementById(`gereken_${r.id}_okeysiz`).innerText = okeysiz.toFixed(2);
+        document.getElementById(`gereken_${r.id}_okey`).innerText = okey.toFixed(2);
+        document.getElementById(`gereken_${r.id}_ciftokey`).innerText = ciftokey.toFixed(2); // ⭐ Yeni alan
+    });
 }
 
-/* TABLO SCREENSHOT */
-document.getElementById("ssBtn").onclick =()=>{
-  const tablo=document.getElementById("puanTablosu");
+// ⭐ SADECE SKOR TABLOSUNUN SS’İNİ ALMA FONKSİYONU
+function tabloSS(){
+  const tablo = document.getElementById("puanTablosu");
   html2canvas(tablo).then(canvas=>{
     const link=document.createElement("a");
     link.download="skor_tablosu.png";
     link.href=canvas.toDataURL();
     link.click();
   });
-};
+}
 </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 </body>
 </html>
